@@ -12,6 +12,10 @@ jobs:
       matrix:
         scala: [ '2.13.18', '3.3.7', '3.7.4' ] # Scala 2.13, 3 LTS (3.3.x), 3 Latest (3.7.x)
         java: [ 17, 21, 25 ]
+        main-type: [ 'extends-app', 'explicit-main', 'annotation-main' ]
+        exclude:
+          - scala: '2.13.18'
+            main-type: 'annotation-main'
     env:
       TERM: dumb
     steps:
@@ -40,4 +44,5 @@ jobs:
             --tests "com.google.cloud.tools.jib.gradle.ScalaProjectIntegrationTest" \
             -Djib.test.scalaVersion=${{ matrix.scala }} \
             -Djib.test.javaVersion=${{ matrix.java }} \
+            -Djib.test.mainType=${{ matrix.main-type }} \
             --info

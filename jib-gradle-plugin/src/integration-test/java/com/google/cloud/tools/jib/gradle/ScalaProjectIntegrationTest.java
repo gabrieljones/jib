@@ -20,6 +20,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.cloud.tools.jib.Command;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.gradle.testkit.runner.BuildResult;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -39,6 +42,21 @@ public class ScalaProjectIntegrationTest {
     // This allows the test runner to control the versions.
     String scalaVersion = System.getProperty("jib.test.scalaVersion", "2.13.12");
     String javaVersion = System.getProperty("jib.test.javaVersion", "17");
+    String mainType = System.getProperty("jib.test.mainType", "extends-app");
+
+    Path sourceFile =
+        scalaTestProject.getProjectRoot().resolve("src/main/scala/example/Main.scala");
+    String sourceContent = "";
+    if ("extends-app".equals(mainType)) {
+      sourceContent =
+          "package example\n\nobject Main extends App {\n  println(\"Hello World\")\n}";
+    } else if ("explicit-main".equals(mainType)) {
+      sourceContent =
+          "package example\n\nobject Main {\n  def main(args: Array[String]): Unit = println(\"Hello World\")\n}";
+    } else if ("annotation-main".equals(mainType)) {
+      sourceContent = "package example\n\n@main def run(): Unit = println(\"Hello World\")";
+    }
+    Files.write(sourceFile, sourceContent.getBytes(StandardCharsets.UTF_8));
 
     BuildResult buildResult =
         scalaTestProject.build(
