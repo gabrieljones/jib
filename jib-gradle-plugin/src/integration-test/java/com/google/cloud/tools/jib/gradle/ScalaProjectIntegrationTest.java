@@ -19,10 +19,7 @@ package com.google.cloud.tools.jib.gradle;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.cloud.tools.jib.Command;
-import com.google.cloud.tools.jib.IntegrationTestingConfiguration;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import org.gradle.testkit.runner.BuildResult;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -30,7 +27,9 @@ import org.junit.Test;
 /** Integration tests for building Scala projects. */
 public class ScalaProjectIntegrationTest {
 
-  @ClassRule public static final TestProject scalaTestProject = new TestProject("scala-repro");
+  @ClassRule
+  public static final TestProject scalaTestProject =
+      new TestProject("scala-repro").withGradleVersion("9.2.1");
 
   @Test
   public void testBuild_scala() throws IOException, InterruptedException {
