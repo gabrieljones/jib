@@ -1,0 +1,35 @@
+plugins {
+  id 'scala'
+  id 'com.google.cloud.tools.jib'
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+    def scalaVersion = project.findProperty('scalaVersion') ?: '2.13.12'
+    if (scalaVersion.startsWith('3.')) {
+        implementation "org.scala-lang:scala3-library_3:${scalaVersion}"
+    } else {
+        implementation "org.scala-lang:scala-library:${scalaVersion}"
+    }
+}
+
+// Allow configuring Java toolchain from command line or properties
+java {
+    toolchain {
+        if (project.hasProperty('javaVersion')) {
+            languageVersion = JavaLanguageVersion.of(project.property('javaVersion') as int)
+        } else {
+             // Default to 17 if not specified
+             languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+}
+
+jib {
+  to {
+    image = System.getProperty('_TARGET_IMAGE') ?: 'scala-test'
+  }
+}
