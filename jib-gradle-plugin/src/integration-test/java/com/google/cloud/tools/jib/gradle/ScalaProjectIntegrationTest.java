@@ -46,6 +46,7 @@ public class ScalaProjectIntegrationTest {
 
     Path sourceFile =
         scalaTestProject.getProjectRoot().resolve("src/main/scala/example/Main.scala");
+    Files.createDirectories(sourceFile.getParent());
     String sourceContent = "";
     if ("extends-app".equals(mainType)) {
       sourceContent =
