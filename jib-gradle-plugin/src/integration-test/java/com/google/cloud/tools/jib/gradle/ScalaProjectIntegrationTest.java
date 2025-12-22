@@ -43,6 +43,14 @@ public class ScalaProjectIntegrationTest {
     String scalaVersion = System.getProperty("jib.test.scalaVersion", "2.13.12");
     String javaVersion = System.getProperty("jib.test.javaVersion", "17");
     String mainType = System.getProperty("jib.test.mainType", "extends-app");
+    String gradleJavaHome = System.getProperty("jib.test.gradleJavaHome");
+
+    if (gradleJavaHome != null) {
+      Path gradleProperties = scalaTestProject.getProjectRoot().resolve("gradle.properties");
+      Files.write(
+          gradleProperties,
+          ("org.gradle.java.home=" + gradleJavaHome).getBytes(StandardCharsets.UTF_8));
+    }
 
     Path sourceFile =
         scalaTestProject.getProjectRoot().resolve("src/main/scala/example/Main.scala");

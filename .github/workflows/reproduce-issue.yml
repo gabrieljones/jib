@@ -25,6 +25,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: |
+            11
             17
             21
             25
@@ -40,9 +41,11 @@ jobs:
 
       - name: Run Scala Reproduction Test
         run: |
+          export JAVA_HOME=$JAVA_HOME_11_X64
           ./gradlew :jib-gradle-plugin:integrationTest \
             --tests "com.google.cloud.tools.jib.gradle.ScalaProjectIntegrationTest" \
             -Djib.test.scalaVersion=${{ matrix.scala }} \
             -Djib.test.javaVersion=${{ matrix.java }} \
             -Djib.test.mainType=${{ matrix.main-type }} \
+            -Djib.test.gradleJavaHome=$JAVA_HOME_25_X64 \
             --info
