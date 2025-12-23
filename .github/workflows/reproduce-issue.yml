@@ -41,11 +41,15 @@ jobs:
 
       - name: Run Scala Reproduction Test
         run: |
+          JAVA_VER="${{ matrix.java }}"
+          VAR_NAME="JAVA_HOME_${JAVA_VER}_X64"
+          TEST_JAVA_HOME=${!VAR_NAME}
+
           export JAVA_HOME=$JAVA_HOME_11_X64
           ./gradlew :jib-gradle-plugin:integrationTest \
             --tests "com.google.cloud.tools.jib.gradle.ScalaProjectIntegrationTest" \
             -Djib.test.scalaVersion=${{ matrix.scala }} \
             -Djib.test.javaVersion=${{ matrix.java }} \
             -Djib.test.mainType=${{ matrix.main-type }} \
-            -Djib.test.gradleJavaHome=$JAVA_HOME_25_X64 \
+            -Djib.test.gradleJavaHome=$TEST_JAVA_HOME \
             --info
