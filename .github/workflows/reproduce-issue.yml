@@ -39,17 +39,49 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Run Scala Reproduction Test
+      - name: Publish Jib to Maven Local
         run: |
+          export JAVA_HOME=$JAVA_HOME_11_X64
+          ./gradlew :jib-gradle-plugin:publishToMavenLocal
+
+      - name: Setup Test Project
+        run: |
+          cp -r jib-gradle-plugin/src/integration-test/resources/gradle/projects/scala-repro reproduction-project
+
+          # Inject Jib Plugin Version
+          VERSION=$(grep "version =" jib-gradle-plugin/gradle.properties | cut -d'=' -f2 | xargs)
+          sed -i "s/id(\"com.google.cloud.tools.jib\")/id(\"com.google.cloud.tools.jib\") version \"$VERSION\"/" reproduction-project/build.gradle.kts
+
+          # Generate Main.scala
+          mkdir -p reproduction-project/src/main/scala/example
+          FILE="reproduction-project/src/main/scala/example/Main.scala"
+          TYPE="${{ matrix.main-type }}"
+
+          if [ "$TYPE" == "extends-app" ]; then
+            echo -e "package example\n\nobject Main extends App {\n  println(\"Hello World\")\n}" > $FILE
+          elif [ "$TYPE" == "explicit-main" ]; then
+            echo -e "package example\n\nobject Main {\n  def main(args: Array[String]): Unit = println(\"Hello World\")\n}" > $FILE
+          elif [ "$TYPE" == "annotation-main" ]; then
+            echo -e "package example\n\n@main def run(): Unit = println(\"Hello World\")" > $FILE
+          fi
+
+      - name: Run Gradle Build
+        run: |
+          cd reproduction-project
+
+          # Download Gradle 9.2.1
+          wget -q https://services.gradle.org/distributions/gradle-9.2.1-bin.zip
+          unzip -q gradle-9.2.1-bin.zip
+          export PATH=$PWD/gradle-9.2.1/bin:$PATH
+
+          # Determine Java Home for Test
           JAVA_VER="${{ matrix.java }}"
           VAR_NAME="JAVA_HOME_${JAVA_VER}_X64"
           TEST_JAVA_HOME=${!VAR_NAME}
+          export JAVA_HOME=$TEST_JAVA_HOME
 
-          export JAVA_HOME=$JAVA_HOME_11_X64
-          ./gradlew :jib-gradle-plugin:integrationTest \
-            --tests "com.google.cloud.tools.jib.gradle.ScalaProjectIntegrationTest" \
-            -Djib.test.scalaVersion=${{ matrix.scala }} \
-            -Djib.test.javaVersion=${{ matrix.java }} \
-            -Djib.test.mainType=${{ matrix.main-type }} \
-            -Djib.test.gradleJavaHome=$TEST_JAVA_HOME \
-            --info
+          # Run Build
+          gradle jibDockerBuild \
+            -PscalaVersion=${{ matrix.scala }} \
+            -PjavaVersion=${{ matrix.java }} \
+            --info --stacktrace
